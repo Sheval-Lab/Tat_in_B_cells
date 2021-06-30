@@ -1,10 +1,16 @@
 ## Load libraries --------------------------------------------------------------
 library(tidyverse)
+library(scales)
 library(clusterProfiler)
+source("scripts/functions/exclude_nested_clusters.R")
 
 input_dir <- "output/tables/01_DGEA/deseq"
 output_dir <- "output/tables/03_GE/KEGG"
 fig_dir <- "output/figures/03_GE/KEGG"
+
+
+## Specify log2FoldChange threshold for DEGs -----------------------------------
+log2fc_threshold <- log2(1.5)
 
 
 ## Load DGEA results -----------------------------------------------------------
@@ -41,8 +47,9 @@ names(fc_list_flt) <- tat %>% filter(baseMean >= 100, padj < 0.05) %>% pull(entr
 fc_list_flt <- sort(fc_list_flt, decreasing = TRUE)
 
 ### Prepare gene lists of UP and DOWN regulated DEGs ---------------------------
-genes_up <- tat %>% filter(padj < 0.05, log2FC >= 1) %>% pull(entrezID)
-genes_dn <- tat %>% filter(padj < 0.05, log2FC <= (-1)) %>% pull(entrezID)
+### Fold change >= 1.5
+genes_up <- tat %>% filter(padj < 0.05, log2FC >= log2fc_threshold) %>% pull(entrezID)
+genes_dn <- tat %>% filter(padj < 0.05, log2FC <= (-log2fc_threshold)) %>% pull(entrezID)
 
 
 ## Run ORA against KEGG database ----------------------------------------------
@@ -50,7 +57,7 @@ genes_dn <- tat %>% filter(padj < 0.05, log2FC <= (-1)) %>% pull(entrezID)
 kegg_ora_up <- enrichKEGG(
   gene = genes_up,
   organism = "hsa",
-  pvalueCutoff = 0.05,
+  pvalueCutoff = 0.1,
   universe = tat$entrezID)
 
 head(kegg_ora_up)
@@ -68,12 +75,34 @@ head(kegg_ora_dn)
 kegg_ora <- kegg_ora_up
 kegg_ora@gene <- c(kegg_ora_up@gene, kegg_ora_dn@gene)
 kegg_ora@result <- rbind(head(kegg_ora_up), head(kegg_ora_dn))
-# rownames(kegg_ora@result) <- kegg_ora@result$ID
+rownames(kegg_ora@result) <- kegg_ora@result$ID
+
+#### Add UP/DOWN labels to enriched categories
+kegg_ora@result %<>% 
+  mutate(sign = if_else(ID %in% head(kegg_ora_up)$ID, "activated", "suppressed")) %>% 
+  arrange(desc(sign), 
+    as.numeric(str_extract(GeneRatio, "^\\d+")) / 
+      as.numeric(str_extract(GeneRatio, "\\d+$")))
+
 head(kegg_ora)
+
+
+### Make dotplot of all enriched categories
+dotplot(kegg_ora, showCategory = nrow(kegg_ora), split = "sign") + 
+  facet_grid(.~sign) +
+  theme(
+    strip.background = element_rect(fill = "white", colour = "black", size = 0.5, linetype = "solid"),
+    strip.text = element_text(face = "bold", size = 12)) +
+  scale_y_discrete(limits = kegg_ora@result$Description) +
+  scale_x_continuous(labels = label_number(accuracy = 0.01))
+
+ggsave(str_c(fig_dir, "KEGG_ORA_dot.png", sep = "/"), units = "cm", width = 7, height = 4, scale = 3.4)
+ggsave(str_c(fig_dir, "KEGG_ORA_dot.svg", sep = "/"), units = "cm", width = 7, height = 4, scale = 3.4)
 
 
 ### Make cnetplot
 cnetplot(setReadable(kegg_ora, 'org.Hs.eg.db', 'ENTREZID'), 
+         showCategory = nrow(kegg_ora),
          foldChange = fc_list, #node_label = "none",
          cex_category = 0.7,
          cex_label_gene = 0.5,
@@ -81,9 +110,44 @@ cnetplot(setReadable(kegg_ora, 'org.Hs.eg.db', 'ENTREZID'),
   scale_colour_gradient2(name = "log2FoldChange", low = "blue", mid = "white", high = "red") + 
   guides(color = guide_colourbar(barwidth = 0.7, barheight = 4))
 
-ggsave(str_c(fig_dir, "KEGG_ORA_cnet.png", sep = "/"), units = "cm", width = 16, height = 8)
-ggsave(str_c(fig_dir, "KEGG_ORA_cnet.svg", sep = "/"), units = "cm", width = 16, height = 8)
-  
+ggsave(str_c(fig_dir, "KEGG_ORA_cnet.png", sep = "/"), units = "cm", width = 16, height = 10, scale = 1.5)
+ggsave(str_c(fig_dir, "KEGG_ORA_cnet.svg", sep = "/"), units = "cm", width = 16, height = 10, scale = 1.5)
+
+
+### Exclude nested clusters
+kegg_ora_flt <- exclude_nested_clusters(kegg_ora)
+
+#### Make cnetplot on filtered results
+cnetplot(setReadable(kegg_ora_flt, 'org.Hs.eg.db', 'ENTREZID'), 
+         showCategory = nrow(kegg_ora),
+         foldChange = fc_list, #node_label = "none",
+         cex_category = 0.7,
+         cex_label_gene = 0.5,
+         cex_label_category = 0.5) +
+  scale_colour_gradient2(name = "log2FoldChange", low = "blue", mid = "white", high = "red") + 
+  guides(color = guide_colourbar(barwidth = 0.7, barheight = 4))
+
+ggsave(str_c(fig_dir, "KEGG_ORA_cnet_flt.png", sep = "/"), units = "cm", width = 16, height = 9, scale = 1.5)
+ggsave(str_c(fig_dir, "KEGG_ORA_cnet_flt.svg", sep = "/"), units = "cm", width = 16, height = 9, scale = 1.5)
+
+#### Filter even more
+clusters2exclude <- c("hsa05323", "hsa05164", "hsa05171")
+
+kegg_ora_flt_2 <- kegg_ora_flt
+kegg_ora_flt_2@result <- kegg_ora_flt_2@result %>% filter(!(ID %in% clusters2exclude))
+
+cnetplot(setReadable(kegg_ora_flt_2, 'org.Hs.eg.db', 'ENTREZID'), 
+         showCategory = nrow(kegg_ora),
+         foldChange = fc_list, #node_label = "none",
+         cex_category = 0.7,
+         cex_label_gene = 0.5,
+         cex_label_category = 0.5) +
+  scale_colour_gradient2(name = "log2FoldChange", low = "blue", mid = "white", high = "red") + 
+  guides(color = guide_colourbar(barwidth = 0.7, barheight = 4))
+
+ggsave(str_c(fig_dir, "KEGG_ORA_cnet_flt2.png", sep = "/"), units = "cm", width = 16, height = 8, scale = 1.5)
+ggsave(str_c(fig_dir, "KEGG_ORA_cnet_flt2.svg", sep = "/"), units = "cm", width = 16, height = 8, scale = 1.5)
+
 
 ## Run GSEA against KEGG database ----------------------------------------------
 set.seed(42) ## use seed for reproducibility
@@ -98,7 +162,7 @@ kegg_gsea <- gseKEGG(
 head(kegg_gsea)
 
 ### Make dotplot of all enriched categories
-dotplot(kegg_gsea, showCategory = 11, split=".sign") + 
+dotplot(kegg_gsea, showCategory = nrow(kegg_gsea), split = ".sign") + 
   facet_grid(.~.sign) +
   theme(
     strip.background = element_rect(fill = "white", colour = "black", size = 0.5, linetype = "solid"),
@@ -121,7 +185,7 @@ kegg_gsea_mod@result$core_enrichment <-
 kegg_gsea_mod <- setReadable(kegg_gsea_mod, "org.Hs.eg.db", "ENTREZID")
 
 ### Make cnetplot of all enriched categories
-cnetplot(kegg_gsea_mod, showCategory = 11, foldChange = fc_list_flt,
+cnetplot(kegg_gsea_mod, showCategory = nrow(kegg_gsea_mod), foldChange = fc_list_flt,
          cex_category = 0.7,
          cex_label_gene = 0.5,
          cex_label_category = 0.5) +
@@ -133,12 +197,13 @@ ggsave(str_c(fig_dir, "KEGG_GSEA_cnet.svg", sep = "/"), units = "cm", width = 16
 
 
 ### Make cnetplot of pre-filtered enriched categories
-cat2keep <- c("hsa04060", "hsa05168", "hsa04621", "hsa05205", "hsa05165", "hsa04510", "hsa04120")
+clusters2exclude <- c("hsa05161", "hsa05160", "hsa05164", "hsa05171")
+
 kegg_gsea_mod_flt <- kegg_gsea_mod
 kegg_gsea_mod_flt@result <- kegg_gsea_mod_flt@result %>% 
-  filter(ID %in% cat2keep)
+  filter(!(ID %in% clusters2exclude))
 
-cnetplot(kegg_gsea_mod_flt, showCategory = 11, foldChange = fc_list_flt,
+cnetplot(kegg_gsea_mod_flt, showCategory = nrow(kegg_gsea_mod_flt), foldChange = fc_list_flt,
          cex_category = 0.7,
          cex_label_gene = 0.5,
          cex_label_category = 0.5) +

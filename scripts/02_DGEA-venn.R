@@ -7,6 +7,10 @@ output_dir <- "output/tables/02_DGEA-plots"
 fig_dir <- "output/figures/02_DGEA-plots"
 
 
+## Specify log2FoldChange threshold for DEGs -----------------------------------
+log2fc_threshold <- log2(1.5)
+
+
 ## Load DGEA results -----------------------------------------------------------
 tat_vs_lcl <- read_tsv(str_c(input_dir, "Tat_vs_LCL.LFC.DE.tsv", sep = "/"))
 cys_vs_lcl <- read_tsv(str_c(input_dir, "Cys_vs_LCL.LFC.DE.tsv", sep = "/"))
@@ -14,10 +18,10 @@ cys_vs_lcl <- read_tsv(str_c(input_dir, "Cys_vs_LCL.LFC.DE.tsv", sep = "/"))
 
 ## Prepare list of UP and DOWN-regulated DEGs ----------------------------------
 tat_cys <- list(
-  tat_up = filter(tat_vs_lcl, padj < 0.05, log2FC >= 1) %>%  pull(geneID), 
-  cys_up = filter(cys_vs_lcl, padj < 0.05, log2FC >= 1) %>%  pull(geneID), 
-  tat_dn = filter(tat_vs_lcl, padj < 0.05, log2FC <= (-1)) %>%  pull(geneID),
-  cys_dn = filter(cys_vs_lcl, padj < 0.05, log2FC <= (-1)) %>%  pull(geneID))
+  tat_up = filter(tat_vs_lcl, padj < 0.05, log2FC >= log2fc_threshold) %>%  pull(geneID), 
+  cys_up = filter(cys_vs_lcl, padj < 0.05, log2FC >= log2fc_threshold) %>%  pull(geneID), 
+  tat_dn = filter(tat_vs_lcl, padj < 0.05, log2FC <= (-log2fc_threshold)) %>%  pull(geneID),
+  cys_dn = filter(cys_vs_lcl, padj < 0.05, log2FC <= (-log2fc_threshold)) %>%  pull(geneID))
 
 cat_names <- c(
   expression("RPMI"^{"Tat"}~"vs"~"RPMI"), 
@@ -42,7 +46,7 @@ venn.diagram(
   cat.fontfamily = "sans",
   cat.cex = c(0.5, 0.5),
   cat.dist = c(0.07, 0.07),
-  cat.pos = c(200, 160),
+  cat.pos = c(340, 20),
   ## Main title
   main = "Upregulated DEGs", 
   main.cex = 0.6, 
@@ -67,7 +71,7 @@ venn.diagram(
   category.names = cat_names,
   cat.fontfamily = "sans",
   cat.cex = c(0.5, 0.5),
-  cat.dist = c(0.06, 0.06),
+  cat.dist = c(0.06, 0.08),
   cat.pos = c(340, 20),
   ## Main title
   main = "Downregulated DEGs", 

@@ -51,7 +51,7 @@ degs_number_pc <- degs %>%
 degs_number <- rbind(degs_number_all, degs_number_pc) %>% 
   mutate(
     n = ifelse(direction == "neg", -n, n),
-    text_position = ifelse(direction == "neg", -50, 50),
+    text_position = ifelse(direction == "neg", -100, 100),
     comparison = factor(comparison, 
                         levels = c("gfp_vs_lcl", "tat_vs_lcl", "cys_vs_lcl")))
 

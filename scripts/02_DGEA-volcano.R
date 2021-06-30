@@ -6,6 +6,10 @@ output_dir <- "output/tables/02_DGEA-plots"
 fig_dir <- "output/figures/02_DGEA-plots"
 
 
+## Specify log2FoldChange threshold for DEGs -----------------------------------
+log2fc_threshold <- log2(1.5)
+
+
 ## Load DGEA results -----------------------------------------------------------
 tat_vs_cys <- read_tsv(str_c(input_dir, "Tat_vs_Cys.tsv", sep = "/"))
 
@@ -16,31 +20,28 @@ vln_df <- tat_vs_cys %>%
     geneID, gene_name, padj, log2FC,
     gene_type = ifelse(gene_type == "protein_coding", "protein_coding", "other"),
     group = case_when(
-      ((padj < 0.05) & (log2FC >= 1) & (gene_type == "protein_coding")) ~ "up_fc2_pc",
-      ((padj < 0.05) & (log2FC <= (-1)) & (gene_type == "protein_coding")) ~ "dn_fc2_pc",
-      ((padj < 0.05) & (log2FC >= 1)) ~ "up_fc2",
-      ((padj < 0.05) & (log2FC <= (-1))) ~ "dn_fc2",
+      # ((padj < 0.05) & (log2FC >= log2fc_threshold) & (gene_type == "protein_coding")) ~ "up_fc2_pc",
+      # ((padj < 0.05) & (log2FC <= (-log2fc_threshold)) & (gene_type == "protein_coding")) ~ "dn_fc2_pc",
+      ((padj < 0.05) & (log2FC >= log2fc_threshold)) ~ "up_fc2",
+      ((padj < 0.05) & (log2FC <= (-log2fc_threshold))) ~ "dn_fc2",
       ((padj < 0.05) & (log2FC >= 0)) ~ "up",
       ((padj < 0.05) & (log2FC <= 0)) ~ "dn",
       TRUE ~ "not_significant"),
-    group = factor(group, levels = c("up_fc2_pc", "up_fc2", "up", "dn_fc2_pc", "dn_fc2",  "dn", "not_significant")))
+    group = factor(group, levels = c("up_fc2", "up", "dn_fc2",  "dn", "not_significant")))
 
-write_tsv(vln_df, str_c(output_dir, "Tat_vs_Cys.vln_df.tsv"))
+write_tsv(vln_df, str_c(output_dir, "Tat_vs_Cys.vln_df.tsv", sep = "/"))
 
 ## Make volcano plot -----------------------------------------------------------
-cols = c("up_fc2_pc" = "#db3a34", 
-         "up_fc2" = "#ef6351", 
-         "up" = "#f7a399",
-         "dn_fc2_pc" = "#03045e", 
-         "dn_fc2" = "#0077b6", 
-         "dn" = "#00b4d8",
-         "not_significant" = "grey")
+cols = c(
+  "up_fc2" = "#db3a34", 
+  "up" = "#f7a399",
+  "dn_fc2" = "#03045e", 
+  "dn" = "#00b4d8",
+  "not_significant" = "grey")
 
 group_names <- c(
-  "p.adj < 0.05\nlog2FC \u2265 1\nprotein-coding gene", 
   "p.adj < 0.05\nlog2FC \u2265 1",
   "p.adj < 0.05\nlog2FC \u2265 0",
-  "p.adj < 0.05\nlog2FC \u2264 -1\nprotein-coding gene", 
   "p.adj < 0.05\nlog2FC \u2264 -1", 
   "p.adj < 0.05\nlog2FC \u2264 0",
   "Not significant")
@@ -52,8 +53,8 @@ ggplot(vln_df, aes(x = log2FC, y = -log10(padj), color = group)) +
   # geom_text_repel(filter(res_def_df, gene_expr %in% c("up_FC2", "down_FC2")),
   #                 mapping = aes(label = gene_name), size = 3) +
   geom_hline(yintercept = -log10(0.05), linetype = "dashed", color = "black") +
-  geom_vline(xintercept = 1, linetype = "dashed", color = "black") +
-  geom_vline(xintercept = -1, linetype = "dashed", color = "black") +
+  geom_vline(xintercept = log2fc_threshold, linetype = "dashed", color = "black") +
+  geom_vline(xintercept = -log2fc_threshold, linetype = "dashed", color = "black") +
   ## Edit axis names
   ylab(expression(-log[10]~padj)) +
   xlab(expression(log[2]~FoldChange)) +

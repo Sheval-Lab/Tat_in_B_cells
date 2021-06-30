@@ -5,7 +5,7 @@
 # It saves extracted results (with and without LFC shrinkage)
 # into 'deseq' subdirectory of the provided output directory 
 
-extract_results <- function(dds, numerator, denominator, gene_annotation){
+extract_results <- function(dds, numerator, denominator, gene_annotation, log2FC_threshold){
   ### Extract normalized counts
   counts_norm <- counts(dds, normalized=TRUE) %>% 
     as.data.frame() %>% 
@@ -70,10 +70,10 @@ extract_results <- function(dds, numerator, denominator, gene_annotation){
   write_tsv(res_df, res_file)
   write_tsv(res_LFC_df, res_LFC_file)
   
-  res_df %>% filter(padj < 0.05, abs(log2FC) >= 1) %>% 
+  res_df %>% filter(padj < 0.05, abs(log2FC) >= as.double(log2FC_threshold)) %>% 
     write_tsv(., res_DE_file)
   
-  res_LFC_df %>% filter(padj < 0.05, abs(log2FC) >= 1) %>% 
+  res_LFC_df %>% filter(padj < 0.05, abs(log2FC) >= as.double(log2FC_threshold)) %>% 
     write_tsv(., res_LFC_DE_file)
   
 }

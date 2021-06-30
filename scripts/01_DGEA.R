@@ -94,6 +94,8 @@ dds <- DESeq(dds)
 
 saveRDS(dds, str_c(output_dir, "dds.rds", sep = "/"))
 
+dds <- readRDS(str_c(output_dir, "dds.rds", sep = "/"))
+
 
 ## Extract DGEA results --------------------------------------------------------
 ### Create contrasts list
@@ -107,11 +109,13 @@ contrasts_list <- contrasts_list[c(3,7,15,13),]
 
 ### Extract results
 #### Tat vs Cys
-walk2(contrasts_list$numerator[4], contrasts_list$denominator[4], extract_results, dds = dds, gene_annotation = gene_annotation)
+walk2(contrasts_list$numerator[4], contrasts_list$denominator[4], 
+      extract_results, dds = dds, gene_annotation = gene_annotation, log2FC_threshold = log2(1.5))
 
 #### Tat vs LCL, Cys vs LCL, GFP vs LCL
 dds$sample <- relevel(dds$sample, ref = "LCL")
 dds <- DESeq(dds)
 
-walk2(contrasts_list$numerator[1:3], contrasts_list$denominator[1:3], extract_results, dds = dds, gene_annotation = gene_annotation)
+walk2(contrasts_list$numerator[1:3], contrasts_list$denominator[1:3], 
+      extract_results, dds = dds, gene_annotation = gene_annotation, log2FC_threshold = log2(1.5))
 
