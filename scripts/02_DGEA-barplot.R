@@ -58,13 +58,17 @@ degs_number <- rbind(degs_number_all, degs_number_pc) %>%
 write_tsv(degs_number, str_c(output_dir, "degs_number.tsv", sep = "/"))
 
 ## Plot DEGs number as barplot -------------------------------------------------
+degs_number <- read_tsv(str_c(output_dir, "degs_number.tsv", sep = "/")) %>% 
+  mutate(comparison = factor(comparison, 
+                             levels = c("gfp_vs_lcl", "tat_vs_lcl", "cys_vs_lcl")))
+
 cols <- c("pos" = "red", "neg" = "blue")
 facet_names <- c(all = "All genes", protein_coding = "Protein-coding genes")
 sample_names_format <- c(
   expression("RPMI"^{"EGFP"}~"vs"~"RPMI"), 
   expression("RPMI"^{"Tat"}~"vs"~"RPMI"),  
   expression("RPMI"^{"Cys"}~"vs"~"RPMI"))
-y_axis <- c(-300, -200, -100, 0, 100, 200, 300)
+y_axis <- c(-600, -400, -200, 0, 200, 400)
 
 ggplot(degs_number, aes(x = comparison, y = n, fill = direction)) + 
   geom_bar(stat="identity", position="identity", alpha = 0.7) + 
@@ -89,8 +93,8 @@ ggplot(degs_number, aes(x = comparison, y = n, fill = direction)) +
         strip.text = element_text(face="bold", size=10), 
         legend.position = "top",
         aspect.ratio = 1)
-  
-ggsave(str_c(fig_dir, "DEGs_barplot.png", sep = "/"), units = "cm", width = 16*2/3)
-ggsave(str_c(fig_dir, "DEGs_barplot.svg", sep = "/"), units = "cm", width = 16*2/3)
 
+
+ggsave(str_c(fig_dir, "DEGs_barplot.png", sep = "/"), units = "cm", width = 7, height = 10, scaling = 2/3)
+ggsave(str_c(fig_dir, "DEGs_barplot.svg", sep = "/"), units = "cm", width = 7, height = 10, scaling = 2/3)
 

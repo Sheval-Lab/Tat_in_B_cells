@@ -2,6 +2,8 @@
 library(tidyverse)
 library(scales)
 library(clusterProfiler)
+library(ggraph)
+library(patchwork)
 source("scripts/functions/exclude_nested_clusters.R")
 
 input_dir <- "output/tables/01_DGEA/deseq"
@@ -57,7 +59,7 @@ genes_dn <- tat %>% filter(padj < 0.05, log2FC <= (-log2fc_threshold)) %>% pull(
 kegg_ora_up <- enrichKEGG(
   gene = genes_up,
   organism = "hsa",
-  pvalueCutoff = 0.1,
+  pvalueCutoff = 0.05,
   universe = tat$entrezID)
 
 head(kegg_ora_up)
@@ -78,24 +80,25 @@ kegg_ora@result <- rbind(head(kegg_ora_up), head(kegg_ora_dn))
 rownames(kegg_ora@result) <- kegg_ora@result$ID
 
 #### Add UP/DOWN labels to enriched categories
-kegg_ora@result %<>% 
-  mutate(sign = if_else(ID %in% head(kegg_ora_up)$ID, "activated", "suppressed")) %>% 
-  arrange(desc(sign), 
-    as.numeric(str_extract(GeneRatio, "^\\d+")) / 
-      as.numeric(str_extract(GeneRatio, "\\d+$")))
+kegg_ora %<>% 
+  mutate(
+    sign = if_else(ID %in% head(kegg_ora_up)$ID, "activated", "suppressed"),
+    FoldEnrichment = DOSE::parse_ratio(GeneRatio) / DOSE::parse_ratio(BgRatio)) %>% 
+  arrange(desc(sign), FoldEnrichment)
 
 head(kegg_ora)
 
 
 ### Make dotplot of all enriched categories
-dotplot(kegg_ora, showCategory = nrow(kegg_ora), split = "sign") + 
+dotpl_ora <- dotplot(kegg_ora, x = "FoldEnrichment", showCategory = nrow(kegg_ora), split = "sign") + 
   facet_grid(.~sign) +
   theme(
     strip.background = element_rect(fill = "white", colour = "black", size = 0.5, linetype = "solid"),
     strip.text = element_text(face = "bold", size = 12)) +
-  scale_y_discrete(limits = kegg_ora@result$Description) +
-  scale_x_continuous(labels = label_number(accuracy = 0.01))
+  scale_y_discrete(limits = kegg_ora@result$Description)
+  
 
+dotpl_ora + ggh4x::force_panelsizes(cols = unit(3.5, "cm"))
 ggsave(str_c(fig_dir, "KEGG_ORA_dot.png", sep = "/"), units = "cm", width = 7, height = 4, scale = 3.4)
 ggsave(str_c(fig_dir, "KEGG_ORA_dot.svg", sep = "/"), units = "cm", width = 7, height = 4, scale = 3.4)
 
@@ -115,10 +118,10 @@ ggsave(str_c(fig_dir, "KEGG_ORA_cnet.svg", sep = "/"), units = "cm", width = 16,
 
 
 ### Exclude nested clusters
-kegg_ora_flt <- exclude_nested_clusters(kegg_ora)
+kegg_ora_flt_1 <- exclude_nested_clusters(kegg_ora, 0)
 
 #### Make cnetplot on filtered results
-cnetplot(setReadable(kegg_ora_flt, 'org.Hs.eg.db', 'ENTREZID'), 
+cnetplot(setReadable(kegg_ora_flt_1, 'org.Hs.eg.db', 'ENTREZID'), 
          showCategory = nrow(kegg_ora),
          foldChange = fc_list, #node_label = "none",
          cex_category = 0.7,
@@ -127,16 +130,18 @@ cnetplot(setReadable(kegg_ora_flt, 'org.Hs.eg.db', 'ENTREZID'),
   scale_colour_gradient2(name = "log2FoldChange", low = "blue", mid = "white", high = "red") + 
   guides(color = guide_colourbar(barwidth = 0.7, barheight = 4))
 
-ggsave(str_c(fig_dir, "KEGG_ORA_cnet_flt.png", sep = "/"), units = "cm", width = 16, height = 9, scale = 1.5)
-ggsave(str_c(fig_dir, "KEGG_ORA_cnet_flt.svg", sep = "/"), units = "cm", width = 16, height = 9, scale = 1.5)
+ggsave(str_c(fig_dir, "KEGG_ORA_cnet_flt_1.png", sep = "/"), units = "cm", width = 16, height = 9, scale = 1.5)
+ggsave(str_c(fig_dir, "KEGG_ORA_cnet_flt_1.svg", sep = "/"), units = "cm", width = 16, height = 9, scale = 1.5)
+
 
 #### Filter even more
-clusters2exclude <- c("hsa05323", "hsa05164", "hsa05171")
+clusters2exclude <- c("hsa05323", "hsa04640", "hsa04061", "hsa05164")
 
-kegg_ora_flt_2 <- kegg_ora_flt
-kegg_ora_flt_2@result <- kegg_ora_flt_2@result %>% filter(!(ID %in% clusters2exclude))
+kegg_ora_flt_2 <- exclude_nested_clusters(kegg_ora, 2)
+## or manually:
+# kegg_ora_flt_2 <- kegg_ora %>% filter(!(ID %in% clusters2exclude))
 
-cnetplot(setReadable(kegg_ora_flt_2, 'org.Hs.eg.db', 'ENTREZID'), 
+cnet_ora <- cnetplot(setReadable(kegg_ora_flt_2, 'org.Hs.eg.db', 'ENTREZID'), 
          showCategory = nrow(kegg_ora),
          foldChange = fc_list, #node_label = "none",
          cex_category = 0.7,
@@ -145,8 +150,88 @@ cnetplot(setReadable(kegg_ora_flt_2, 'org.Hs.eg.db', 'ENTREZID'),
   scale_colour_gradient2(name = "log2FoldChange", low = "blue", mid = "white", high = "red") + 
   guides(color = guide_colourbar(barwidth = 0.7, barheight = 4))
 
-ggsave(str_c(fig_dir, "KEGG_ORA_cnet_flt2.png", sep = "/"), units = "cm", width = 16, height = 8, scale = 1.5)
-ggsave(str_c(fig_dir, "KEGG_ORA_cnet_flt2.svg", sep = "/"), units = "cm", width = 16, height = 8, scale = 1.5)
+ggsave(str_c(fig_dir, "KEGG_ORA_cnet_flt.png", sep = "/"), cnet_ora, units = "cm", width = 16, height = 8, scale = 1.5)
+ggsave(str_c(fig_dir, "KEGG_ORA_cnet_flt.svg", sep = "/"), cnet_ora, units = "cm", width = 16, height = 8, scale = 1.5)
+
+
+
+### Make plots for publishing --------------------------------------------------
+#### Dotplots ------------------------------------------------------------------
+dotpl_up <- dotplot(filter(kegg_ora, sign == "activated"), x = "FoldEnrichment", showCategory = nrow(kegg_ora), split = "sign") + 
+  facet_grid(.~sign) +
+  theme(
+    strip.background = element_rect(fill = "white", colour = "black", size = 0.5, linetype = "solid"),
+    strip.text = element_text(face = "bold", size = 12)) +
+  scale_x_continuous(limits = c(2, 4.2), breaks = c(2, 3, 4)) +
+  scale_y_discrete(limits = filter(kegg_ora, sign == "activated")@result$Description) +
+  ggh4x::force_panelsizes(cols = unit(3, "cm"), rows = unit(5, "cm")) +
+  guides(
+    size = guide_legend(order = 1),
+    color = guide_colourbar(order = 2, reverse = TRUE))
+
+
+dotpl_dn <- dotplot(filter(kegg_ora, sign == "suppressed"), x = "FoldEnrichment", showCategory = nrow(kegg_ora), split = "sign") + 
+  facet_grid(.~sign) +
+  theme(
+    strip.background = element_rect(fill = "white", colour = "black", size = 0.5, linetype = "solid"),
+    strip.text = element_text(face = "bold", size = 12)) +
+  scale_x_continuous(limits = c(2.9, 6.9), breaks = c(3, 5, 7)) +
+  scale_y_discrete(limits = filter(kegg_ora, sign == "suppressed")@result$Description) +
+  ggh4x::force_panelsizes(cols = unit(3, "cm"), rows = unit(5, "cm")) +
+  guides(
+    size = guide_legend(order = 1),
+    color = guide_colourbar(order = 2, reverse = TRUE))
+
+#### Edit legends
+dt_size_limits <- c(min(c(dotpl_up$data$Count, dotpl_dn$data$Count)), max(c(dotpl_up$data$Count, dotpl_dn$data$Count)))
+dt_fill_limits <- c(min(c(dotpl_up$data$p.adjust, dotpl_dn$data$p.adjust)), max(c(dotpl_up$data$p.adjust, dotpl_dn$data$p.adjust)))
+
+dotpl_up <- dotpl_up +
+  scale_size_continuous(limits = dt_size_limits, breaks = c(10, 15, 20)) +
+  scale_color_continuous(limits = dt_fill_limits, breaks = c(0.005, 0.015, 0.025),
+                         low = "red", high = "blue") 
+ggsave(str_c(fig_dir, "KEGG_ORA_dot_up.png", sep = "/"), dotpl_up, units = "cm", width = 8, height = 6, scale = 2)
+ggsave(str_c(fig_dir, "KEGG_ORA_dot_up.pdf", sep = "/"), dotpl_up, units = "cm", width = 8, height = 6, scale = 2)
+
+
+dotpl_dn <- dotpl_dn +
+  scale_size_continuous(limits = dt_size_limits, breaks = c(10, 15, 20)) +
+  scale_color_continuous(limits = dt_fill_limits, breaks = c(0.005, 0.015, 0.025), 
+                         low = "red", high = "blue") 
+ggsave(str_c(fig_dir, "KEGG_ORA_dot_dn.png", sep = "/"), dotpl_dn, units = "cm", width = 10, height = 6, scale = 2)
+ggsave(str_c(fig_dir, "KEGG_ORA_dot_dn.pdf", sep = "/"), dotpl_dn, units = "cm", width = 10, height = 6, scale = 2)
+
+
+#### Cnetplots -----------------------------------------------------------------
+cnet_up <- cnetplot(filter(setReadable(kegg_ora_flt_2, 'org.Hs.eg.db', 'ENTREZID'), sign == "activated"), 
+                    showCategory = nrow(kegg_ora),
+                    foldChange = fc_list, 
+                    # cex_category = 1,
+                    cex_label_gene = 0.8,
+                    # cex_label_category = 0.9, 
+                    node_label = "gene") +
+  scale_colour_gradient(name = "log2FoldChange", low = "lightcoral", high = "red4") + 
+  guides(color = guide_colourbar(barwidth = 0.7, barheight = 10)) 
+
+cnet_dn <- cnetplot(filter(setReadable(kegg_ora_flt_2, 'org.Hs.eg.db', 'ENTREZID'), sign == "suppressed"), 
+                    showCategory = nrow(kegg_ora),
+                    foldChange = fc_list, 
+                    # cex_category = 1,
+                    cex_label_gene = 0.8,
+                    # cex_label_category = 0.9, 
+                    node_label = "gene") +
+  scale_colour_gradient(name = "log2FoldChange", low = "royalblue4", high = "skyblue2") + 
+  guides(
+    color = guide_colourbar(barwidth = 0.7, barheight = 4, order = 1))
+
+
+ggsave(str_c(fig_dir, "KEGG_ORA_cnet_up.png", sep = "/"), cnet_up, units = "cm", width = 5, height = 5, scale = 3.5)
+ggsave(str_c(fig_dir, "KEGG_ORA_cnet_up.pdf", sep = "/"), cnet_up, units = "cm", width = 5, height = 5, scale = 3.5)
+
+ggsave(str_c(fig_dir, "KEGG_ORA_cnet_dn.png", sep = "/"), cnet_dn, units = "cm", width = 5, height = 5, scale = 3.5)
+ggsave(str_c(fig_dir, "KEGG_ORA_cnet_dn.pdf", sep = "/"), cnet_dn, units = "cm", width = 5, height = 5, scale = 3.5)
+
+
 
 
 ## Run GSEA against KEGG database ----------------------------------------------

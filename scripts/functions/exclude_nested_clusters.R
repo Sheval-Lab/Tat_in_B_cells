@@ -1,5 +1,5 @@
 # exclude_nested_clusters function
-exclude_nested_clusters <- function(result_object){
+exclude_nested_clusters <- function(result_object, max_unique_genes){
   df <- result_object@result %>% 
     mutate(
       genes = str_split(geneID, "/"),
@@ -18,7 +18,7 @@ exclude_nested_clusters <- function(result_object){
     
     size_of_nested_subcluster <- cluster_i %>% magrittr::is_in(combined) %>% sum()
     
-    if (size_of_nested_subcluster == cluster_size){
+    if ((cluster_size - size_of_nested_subcluster) <= max_unique_genes){
       clusters2exclude <- append(clusters2exclude, as.integer(i))
     }
   }
@@ -26,7 +26,6 @@ exclude_nested_clusters <- function(result_object){
   result_object@result <- df[-clusters2exclude,] %>% dplyr::select(-genes:cluster_size)
   
   return(result_object)
-
 }
 
 

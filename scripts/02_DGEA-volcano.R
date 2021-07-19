@@ -48,6 +48,7 @@ group_names <- c(
 
 x_axis <- c(-3, -2, -1, 0, 1, 2, 3)
 
+### All genes
 ggplot(vln_df, aes(x = log2FC, y = -log10(padj), color = group)) +
   geom_point(alpha = 0.9) +
   # geom_text_repel(filter(res_def_df, gene_expr %in% c("up_FC2", "down_FC2")),
@@ -75,3 +76,35 @@ ggplot(vln_df, aes(x = log2FC, y = -log10(padj), color = group)) +
 
 ggsave(str_c(fig_dir, "DEGs_volcano.png", sep = "/"), units = "cm", width = 16)
 ggsave(str_c(fig_dir, "DEGs_volcano.svg", sep = "/"), units = "cm", width = 16)
+
+
+### Protein-coding genes
+vln_pc_df <- filter(vln_df, gene_type == "protein_coding")
+
+ggplot(vln_pc_df, aes(x = log2FC, y = -log10(padj), color = group)) +
+  geom_point(alpha = 0.9) +
+  # geom_text_repel(filter(res_def_df, gene_expr %in% c("up_FC2", "down_FC2")),
+  #                 mapping = aes(label = gene_name), size = 3) +
+  geom_hline(yintercept = -log10(0.05), linetype = "dashed", color = "black") +
+  geom_vline(xintercept = log2fc_threshold, linetype = "dashed", color = "black") +
+  geom_vline(xintercept = -log2fc_threshold, linetype = "dashed", color = "black") +
+  ## Edit axis names
+  ylab(expression(-log[10]~padj)) +
+  xlab(expression(log[2]~FoldChange)) +
+  ## Edit color scheme
+  scale_color_manual(name = "", values = cols, labels = group_names) +
+  ## Edit X axis
+  scale_x_continuous(breaks = x_axis, limits = c(-max(abs(vln_pc_df$log2FC)), max(abs(vln_pc_df$log2FC)))) +
+  theme_bw() +
+  theme(
+    aspect.ratio = 1, 
+    text = element_text(size = 12, color = "black"), 
+    # axis.text.x = element_text(color = "black"),
+    # axis.text.y = element_text(color = "black"),
+    panel.background = element_rect(fill = "white", colour = "black", size = 0.5, linetype = "solid"),
+    panel.grid.major = element_blank(), 
+    panel.grid.minor = element_blank())
+
+
+ggsave(str_c(fig_dir, "DEGs_volcano_PC.png", sep = "/"), units = "cm", width = 16)
+ggsave(str_c(fig_dir, "DEGs_volcano_PC.svg", sep = "/"), units = "cm", width = 16)
