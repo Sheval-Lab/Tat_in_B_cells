@@ -11,11 +11,11 @@ log2fc_threshold <- log2(1.5)
 
 
 ## Load DGEA results -----------------------------------------------------------
-tat_vs_cys <- read_tsv(str_c(input_dir, "Tat_vs_Cys.tsv", sep = "/"))
+tat_vs_cys_LFC <- read_tsv(str_c(input_dir, "Tat_vs_Cys.LFC.tsv", sep = "/"))
 
 
 ## Prepare dataframe for plotting volcano plot ---------------------------------
-vln_df <- tat_vs_cys %>% 
+vln_df <- tat_vs_cys_LFC %>% 
   transmute(
     geneID, gene_name, padj, log2FC,
     gene_type = ifelse(gene_type == "protein_coding", "protein_coding", "other"),
@@ -32,12 +32,20 @@ vln_df <- tat_vs_cys %>%
 write_tsv(vln_df, str_c(output_dir, "Tat_vs_Cys.vln_df.tsv", sep = "/"))
 
 ## Make volcano plot -----------------------------------------------------------
+# cols = c(
+#   "up_fc2" = "#db3a34", 
+#   "up" = "#f7a399",
+#   "dn_fc2" = "#03045e", 
+#   "dn" = "#00b4d8",
+#   "not_significant" = "grey")
+
 cols = c(
-  "up_fc2" = "#db3a34", 
-  "up" = "#f7a399",
-  "dn_fc2" = "#03045e", 
-  "dn" = "#00b4d8",
+  "up_fc2" = "#F07A56", 
+  "up" = "#F6B5A2",
+  "dn_fc2" = "#6777A2", 
+  "dn" = "#9AA4C1",
   "not_significant" = "grey")
+
 
 group_names <- c(
   "p.adj < 0.05\nlog2FC \u2265 1",
@@ -75,7 +83,7 @@ ggplot(vln_df, aes(x = log2FC, y = -log10(padj), color = group)) +
 
 
 ggsave(str_c(fig_dir, "DEGs_volcano.png", sep = "/"), units = "cm", width = 16)
-ggsave(str_c(fig_dir, "DEGs_volcano.svg", sep = "/"), units = "cm", width = 16)
+ggsave(str_c(fig_dir, "DEGs_volcano.pdf", sep = "/"), units = "cm", width = 16)
 
 
 ### Protein-coding genes
@@ -107,4 +115,4 @@ ggplot(vln_pc_df, aes(x = log2FC, y = -log10(padj), color = group)) +
 
 
 ggsave(str_c(fig_dir, "DEGs_volcano_PC.png", sep = "/"), units = "cm", width = 16)
-ggsave(str_c(fig_dir, "DEGs_volcano_PC.svg", sep = "/"), units = "cm", width = 16)
+ggsave(str_c(fig_dir, "DEGs_volcano_PC.pdf", sep = "/"), units = "cm", width = 16)

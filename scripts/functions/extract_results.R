@@ -1,9 +1,9 @@
-# extract_results function extracts results of DESeq2 DGEA:
-# transforms the results into a dataframe,
-# adds gene annotation (gene_name, gene_type),
-# and adds normalized counts.
-# It saves extracted results (with and without LFC shrinkage)
-# into 'deseq' subdirectory of the provided output directory 
+#' extract_results function extracts results of DESeq2 DGEA:
+#' transforms the results into a dataframe,
+#' adds gene annotation (gene_name, gene_type),
+#' and adds normalized counts.
+#' It saves extracted results (with and without LFC shrinkage)
+#' into 'deseq' subdirectory of the provided output directory 
 
 extract_results <- function(dds, numerator, denominator, gene_annotation, log2FC_threshold){
   ### Extract normalized counts

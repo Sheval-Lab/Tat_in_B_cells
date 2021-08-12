@@ -14,7 +14,7 @@ gene_annotation <- read_tsv(gene_annotation_file,
                             col_names = c("geneID", "gene_name", "gene_type"))
 
 ## Load counts data ------------------------------------------------------------
-counts_files <- list.files(input_dir, full.names = TRUE)
+counts_files <- list.files(input_dir, full.names = TRUE, pattern = "r.tab$")
 
 ### Extract sample names from file names
 sample_names <- counts_files %>% 
@@ -80,6 +80,7 @@ dds <- DESeqDataSetFromMatrix(
 ### Calculate size factors and save normalized counts
 dds <- estimateSizeFactors(dds)
 sizeFactors(dds)
+dput(sizeFactors(dds), str_c(output_dir, "processed_counts", "size_factors.tsv", sep = "/"))
 
 counts_norm <- counts(dds, normalized=TRUE) %>% 
   as.data.frame() %>% 

@@ -35,8 +35,9 @@ cat_names <- c(
   expression("RPMI"^{"Tat"}~"vs"~"RPMI"), 
   expression("RPMI"^{"Cys"}~"vs"~"RPMI"))
 
-cols <- c("#db3a34", "#ef6351", "#f7a399", "#03045e", "#0077b6", "#00b4d8")
+# cols <- c("#db3a34", "#ef6351", "#f7a399", "#03045e", "#0077b6", "#00b4d8")
 
+cols2 <- c("#F39B7F", "#8491B4")
 
 ## Create Venn plot ------------------------------------------------------------
 ### UP-regulated DEGs ----------------------------------------------------------
@@ -48,9 +49,11 @@ venn.diagram(
   imagetype = "png",
   units = "cm", width = 4, height = 4,
   ## Circle's circumference
-  col = cols[c(2, 5)], lwd = c(1, 1),
+  # col = cols[c(2, 5)], lwd = c(1, 1),
+  col = cols2, lwd = c(1, 1),
   ## Circle's area
-  fill = cols[c(2, 5)], alpha = c(0.5, 0.5),
+  # fill = cols[c(2, 5)], alpha = c(0.5, 0.5),
+  fill = cols2, alpha = c(0.5, 0.5),
   ## Category names
   category.names = cat_names,
   cat.fontfamily = "sans",
@@ -74,9 +77,11 @@ venn.diagram(
   imagetype = "svg",
   units = "cm", width = 2, height = 2,
   ## Circle's circumference
-  col = cols[c(2, 5)], lwd = c(1, 1),
+  # col = cols[c(2, 5)], lwd = c(1, 1),
+  col = cols2, lwd = c(1, 1),
   ## Circle's area
-  fill = cols[c(2, 5)], alpha = c(0.5, 0.5),
+  # fill = cols[c(2, 5)], alpha = c(0.5, 0.5),
+  fill = cols2, alpha = c(0.5, 0.5),
   ## Category names
   category.names = cat_names,
   cat.fontfamily = "sans",
@@ -93,6 +98,7 @@ venn.diagram(
   cex = c(0.8, 0.8, 0.8),
   margin = 0.3)
 
+
 #### Protein-coding genes ------------------------------------------------------
 #### PNG 
 venn.diagram(
@@ -101,15 +107,17 @@ venn.diagram(
   imagetype = "png",
   units = "cm", width = 4, height = 4,
   ## Circle's circumference
-  col = cols[c(2, 5)], lwd = c(1, 1),
+  # col = cols[c(2, 5)], lwd = c(1, 1),
+  col = cols2, lwd = c(1, 1),
   ## Circle's area
-  fill = cols[c(2, 5)], alpha = c(0.5, 0.5),
+  # fill = cols[c(2, 5)], alpha = c(0.5, 0.5),
+  fill = cols2, alpha = c(0.5, 0.5),
   ## Category names
   category.names = cat_names,
   cat.fontfamily = "sans",
   cat.cex = c(0.5, 0.5),
   cat.dist = c(0.07, 0.07),
-  cat.pos = c(200, 160),
+  cat.pos = c(20, 340),
   ## Main title
   main = "Upregulated DEGs", 
   main.cex = 0.6, 
@@ -118,7 +126,8 @@ venn.diagram(
   ## Set labels
   fontfamily = "sans",
   cex = c(0.7, 0.7, 0.7),
-  margin = 0.3)
+  margin = 0.3,
+  inverted = TRUE)
 
 #### SVG
 venn.diagram(
@@ -127,15 +136,17 @@ venn.diagram(
   imagetype = "svg",
   units = "cm", width = 2, height = 2,
   ## Circle's circumference
-  col = cols[c(2, 5)], lwd = c(1, 1),
+  # col = cols[c(2, 5)], lwd = c(1, 1),
+  col = cols2, lwd = c(1, 1),
   ## Circle's area
-  fill = cols[c(2, 5)], alpha = c(0.5, 0.5),
+  # fill = cols[c(2, 5)], alpha = c(0.5, 0.5),
+  fill = cols2, alpha = c(0.5, 0.5),
   ## Category names
   category.names = cat_names,
   cat.fontfamily = "sans",
   cat.cex = c(0.7, 0.7),
   cat.dist = c(0.07, 0.07),
-  cat.pos = c(200, 160),
+  cat.pos = c(20, 340),
   ## Main title
   main = "Upregulated DEGs", 
   main.cex = 0.8, 
@@ -144,7 +155,8 @@ venn.diagram(
   ## Set labels
   fontfamily = "sans",
   cex = c(0.8, 0.8, 0.8),
-  margin = 0.3)
+  margin = 0.3,
+  inverted = TRUE)
 
 ### DOWN-regulated DEGs --------------------------------------------------------
 #### All genes -----------------------------------------------------------------
@@ -155,9 +167,11 @@ venn.diagram(
   imagetype = "png",
   units = "cm", width = 4, height = 4,
   ## Circle's circumference
-  col = cols[c(1, 4)], lwd = c(1, 1),
+  # col = cols[c(1, 4)], lwd = c(1, 1),
+  col = cols2, lwd = c(1, 1),
   ## Circle's area
-  fill = cols[c(1, 4)], alpha = c(0.4, 0.4),
+  # fill = cols[c(1, 4)], alpha = c(0.4, 0.4),
+  fill = cols2, alpha = c(0.5, 0.5),
   ## Category names
   category.names = cat_names,
   cat.fontfamily = "sans",
@@ -181,9 +195,11 @@ venn.diagram(
   imagetype = "svg",
   units = "cm", width = 2, height = 2,
   ## Circle's circumference
-  col = cols[c(1, 4)], lwd = c(1, 1),
+  # col = cols[c(1, 4)], lwd = c(1, 1),
+  col = cols2, lwd = c(1, 1),
   ## Circle's area
-  fill = cols[c(1, 4)], alpha = c(0.4, 0.4),
+  # fill = cols[c(1, 4)], alpha = c(0.4, 0.4),
+  fill = cols2, alpha = c(0.5, 0.5),
   ## Category names
   category.names = cat_names,
   cat.fontfamily = "sans",
@@ -208,9 +224,11 @@ venn.diagram(
   imagetype = "png",
   units = "cm", width = 4, height = 4,
   ## Circle's circumference
-  col = cols[c(1, 4)], lwd = c(1, 1),
+  # col = cols[c(1, 4)], lwd = c(1, 1),
+  col = cols2, lwd = c(1, 1),
   ## Circle's area
-  fill = cols[c(1, 4)], alpha = c(0.4, 0.4),
+  # fill = cols[c(1, 4)], alpha = c(0.4, 0.4),
+  fill = cols2, alpha = c(0.5, 0.5),
   ## Category names
   category.names = cat_names,
   cat.fontfamily = "sans",
@@ -234,9 +252,11 @@ venn.diagram(
   imagetype = "svg",
   units = "cm", width = 2, height = 2,
   ## Circle's circumference
-  col = cols[c(1, 4)], lwd = c(1, 1),
+  # col = cols[c(1, 4)], lwd = c(1, 1),
+  col = cols2, lwd = c(1, 1),
   ## Circle's area
-  fill = cols[c(1, 4)], alpha = c(0.4, 0.4),
+  # fill = cols[c(1, 4)], alpha = c(0.4, 0.4),
+  fill = cols2, alpha = c(0.5, 0.5),
   ## Category names
   category.names = cat_names,
   cat.fontfamily = "sans",
