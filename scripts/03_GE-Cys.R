@@ -80,6 +80,11 @@ kegg_ora %<>%
 
 head(kegg_ora)
 
+### Save as RDS file
+saveRDS(kegg_ora, str_c(output_dir, "Cys-vs-Tat_kegg_ora.rds", sep = "/"))
+
+kegg_ora <- readRDS(str_c(output_dir, "Cys-vs-Tat_kegg_ora.rds", sep = "/"))
+
 
 ### Make dotplot of all enriched categories
 dotpl_ora <- dotplot(kegg_ora, x = "FoldEnrichment", showCategory = nrow(kegg_ora), split = "sign") + 

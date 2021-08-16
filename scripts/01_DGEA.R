@@ -25,9 +25,29 @@ sample_names <- counts_files %>%
 ### Read multiple htseq count files into one dataframe
 counts <- map_dfc(counts_files, read_tsv, col_names = FALSE) %>% 
   select(1, where(is.numeric)) %>% 
-  set_colnames(c("geneID", sample_names)) %>% 
-  ## Filter out summary rows
+  set_colnames(c("geneID", sample_names)) 
+
+### Extract and save summary rows
+counts_summary <- counts %>% 
+  filter(str_detect(geneID, "__no_feature|__ambiguous")) %>% 
+  pivot_longer(cols = -geneID, names_to = "sample", values_to = "count") %>% 
+  pivot_wider(names_from = geneID, values_from = count)
+
+unique_counts_summary <- counts %>% 
+  filter(!str_detect(geneID, "^__")) %>% 
+  select(where(is.numeric)) %>% 
+  colSums()
+
+counts_summary$`__unique` <- unique_counts_summary
+
+write_tsv(counts_summary, str_c(output_dir, "processed_counts", "counts_summary.tsv", sep = "/"))
+
+### Filter out summary rows
+counts <- counts %>% 
   filter(!str_detect(geneID, "^__"))
+
+### Save combined raw counts data
+write_tsv(counts, str_c(output_dir, "processed_counts", "counts_raw.tsv", sep = "/"))
 
 ### Pre-filter non-expressed genes
 counts_flt <- counts %>% 

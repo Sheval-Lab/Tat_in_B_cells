@@ -90,11 +90,11 @@ ggplot(degs_number, aes(x = comparison, y = n, fill = direction)) +
         panel.grid.major = element_blank(), 
         panel.grid.minor = element_blank(),
         strip.background = element_rect(fill="white", colour = "black", size = 0.5, linetype = "solid"),
-        strip.text = element_text(face="bold", size=10), 
+        strip.text = element_text(face="bold", size = 10), 
         legend.position = "top",
         aspect.ratio = 1)
 
 
 ggsave(str_c(fig_dir, "DEGs_barplot.png", sep = "/"), units = "cm", width = 7, height = 10, scaling = 2/3)
-ggsave(str_c(fig_dir, "DEGs_barplot.svg", sep = "/"), units = "cm", width = 7, height = 10, scaling = 2/3)
+ggsave(str_c(fig_dir, "DEGs_barplot.pdf", sep = "/"), units = "cm", width = 7, height = 10, scaling = 2/3)
 

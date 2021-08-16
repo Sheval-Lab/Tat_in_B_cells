@@ -6,7 +6,7 @@ install.packages("ggh4x")
 install.packages("patchwork")
 install.packages("ggnewscale")
 install.packages("VennDiagram")
-install.packages("treemap") ## optional
+install.packages("gplots")
 install.packages("BiocManager")
 renv::install("bioc::DESeq2@1.30.1")
 renv::install("bioc::apeglm@1.12.0")

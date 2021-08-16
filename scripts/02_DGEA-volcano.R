@@ -29,7 +29,7 @@ vln_df <- tat_vs_cys_LFC %>%
       TRUE ~ "not_significant"),
     group = factor(group, levels = c("up_fc2", "up", "dn_fc2",  "dn", "not_significant")))
 
-write_tsv(vln_df, str_c(output_dir, "Tat_vs_Cys.vln_df.tsv", sep = "/"))
+# write_tsv(vln_df, str_c(output_dir, "Tat_vs_Cys.vln_df.tsv", sep = "/"))
 
 ## Make volcano plot -----------------------------------------------------------
 # cols = c(
