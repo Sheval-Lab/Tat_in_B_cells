@@ -7,7 +7,7 @@ fig_dir <- "output/figures/02_DGEA-plots"
 
 
 ## Specify log2FoldChange threshold for DEGs -----------------------------------
-log2fc_threshold <- log2(1.5)
+log2FC_threshold <- log2(1.5)
 
 
 ## Load DGEA results -----------------------------------------------------------
@@ -20,10 +20,10 @@ vln_df <- tat_vs_cys_LFC %>%
     geneID, gene_name, padj, log2FC,
     gene_type = ifelse(gene_type == "protein_coding", "protein_coding", "other"),
     group = case_when(
-      # ((padj < 0.05) & (log2FC >= log2fc_threshold) & (gene_type == "protein_coding")) ~ "up_fc2_pc",
-      # ((padj < 0.05) & (log2FC <= (-log2fc_threshold)) & (gene_type == "protein_coding")) ~ "dn_fc2_pc",
-      ((padj < 0.05) & (log2FC >= log2fc_threshold)) ~ "up_fc2",
-      ((padj < 0.05) & (log2FC <= (-log2fc_threshold))) ~ "dn_fc2",
+      # ((padj < 0.05) & (log2FC >= log2FC_threshold) & (gene_type == "protein_coding")) ~ "up_fc2_pc",
+      # ((padj < 0.05) & (log2FC <= (-log2FC_threshold)) & (gene_type == "protein_coding")) ~ "dn_fc2_pc",
+      ((padj < 0.05) & (log2FC >= log2FC_threshold)) ~ "up_fc2",
+      ((padj < 0.05) & (log2FC <= (-log2FC_threshold))) ~ "dn_fc2",
       ((padj < 0.05) & (log2FC >= 0)) ~ "up",
       ((padj < 0.05) & (log2FC <= 0)) ~ "dn",
       TRUE ~ "not_significant"),
@@ -62,8 +62,8 @@ ggplot(vln_df, aes(x = log2FC, y = -log10(padj), color = group)) +
   # geom_text_repel(filter(res_def_df, gene_expr %in% c("up_FC2", "down_FC2")),
   #                 mapping = aes(label = gene_name), size = 3) +
   geom_hline(yintercept = -log10(0.05), linetype = "dashed", color = "black") +
-  geom_vline(xintercept = log2fc_threshold, linetype = "dashed", color = "black") +
-  geom_vline(xintercept = -log2fc_threshold, linetype = "dashed", color = "black") +
+  geom_vline(xintercept = log2FC_threshold, linetype = "dashed", color = "black") +
+  geom_vline(xintercept = -log2FC_threshold, linetype = "dashed", color = "black") +
   ## Edit axis names
   ylab(expression(-log[10]~padj)) +
   xlab(expression(log[2]~FoldChange)) +
@@ -94,8 +94,8 @@ ggplot(vln_pc_df, aes(x = log2FC, y = -log10(padj), color = group)) +
   # geom_text_repel(filter(res_def_df, gene_expr %in% c("up_FC2", "down_FC2")),
   #                 mapping = aes(label = gene_name), size = 3) +
   geom_hline(yintercept = -log10(0.05), linetype = "dashed", color = "black") +
-  geom_vline(xintercept = log2fc_threshold, linetype = "dashed", color = "black") +
-  geom_vline(xintercept = -log2fc_threshold, linetype = "dashed", color = "black") +
+  geom_vline(xintercept = log2FC_threshold, linetype = "dashed", color = "black") +
+  geom_vline(xintercept = -log2FC_threshold, linetype = "dashed", color = "black") +
   ## Edit axis names
   ylab(expression(-log[10]~padj)) +
   xlab(expression(log[2]~FoldChange)) +

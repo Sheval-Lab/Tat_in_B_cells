@@ -103,4 +103,48 @@ ggplot(summary_gc_lng, aes(x = sample, y = count, fill = read_group)) +
 ggsave(str_c(fig_dir, "gene_counts_stat.png", sep = "/"), units = "cm", width = 15, scaling = 3/4)
 ggsave(str_c(fig_dir, "gene_counts_stat.pdf", sep = "/"), units = "cm", width = 15, scale = 4/3)
 
+### Mapping and count summary
+summary_mc_lng_ <- summary_cmb %>% 
+  select(sample, total_reads, one_al, `__unique`) %>% 
+  pivot_longer(cols = -sample, names_to = "read_group", values_to = "count") %>% 
+  mutate(read_group = factor(read_group, levels = c("total_reads", "one_al", "__unique")))
+
+summary_mc_perc_lng <- summary_cmb_perc %>% 
+  select(sample, total_reads, one_al, `__unique`) %>% 
+  pivot_longer(cols = -sample, names_to = "read_group", values_to = "percent") %>% 
+  mutate(read_group = factor(read_group, levels = c("total_reads", "one_al", "__unique")))
+
+summary_mc_lng <- summary_mc_lng_ %>% 
+  left_join(summary_mc_perc_lng, by = c("sample", "read_group")) %>% 
+  mutate(
+    sample = factor(sample, levels = sample_names),
+    pos = count)
+
+
+cols4 <- c("#CC79A7", "#D55E00", "#009E73", "#0072B2")
+
+ggplot(summary_mc_lng, aes(x = sample, y = count, fill = read_group)) +
+  geom_col(width = 0.65, alpha = 0.7, position = position_dodge()) +
+  # geom_text(aes(x = sample, y = pos, label = paste0(round(percent, 1), "%")), size = 3) +
+  scale_x_discrete(labels = sample_names_format_all) +
+  scale_y_continuous(labels = scales::format_format(big.mark = " ", decimal.mark = ".", scientific = FALSE)) +
+  scale_fill_manual(
+    values = rev(cols4[1:3]), 
+    labels = c("Total reads", "Uniquely aligned to genome", "Uniquely mapped to GENCODE annotation")) +
+  labs(x = "", y = "# reads", fill = "") +
+  ## Edit theme
+  theme(text = element_text(size = 12, color = "black"), 
+        axis.text.x = element_text(angle = 45, hjust = 1, color = "black"),
+        axis.text.y = element_text(color = "black"),
+        panel.background = element_rect(fill = "white", colour = "white", size = 0.5, linetype = "solid"), 
+        axis.line.x.bottom = element_line(color = "black"),
+        axis.line.y.left = element_line(color = "black"),
+        panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank(),
+        legend.position = "top",
+        aspect.ratio = 2/3)
+
+ggsave(str_c(fig_dir, "S1_gene_map_counts_stat.png", sep = "/"), units = "cm", width = 15, scaling = 3/4)
+ggsave(str_c(fig_dir, "S1_gene_map_counts_stat.pdf", sep = "/"), units = "cm", width = 15, scale = 4/3)
+
 
