@@ -140,3 +140,12 @@ dds <- DESeq(dds)
 walk2(contrasts_list$numerator[1:3], contrasts_list$denominator[1:3], 
       extract_results, dds = dds, gene_annotation = gene_annotation, log2FC_threshold = log2(1.5))
 
+
+### Reverse comparison 'Tat vs Cys' -> 'Cys vs Tat'
+tat_cys <- read_tsv(str_c(output_dir, "deseq/Tat_vs_Cys.LFC.DE.tsv", sep = "/"))
+tat_cys_r <- tat_cys %>% 
+  mutate(
+    log2FC = -log2FC,
+    FC = 2^log2FC)
+
+write_tsv(tat_cys_r, str_c(output_dir, "deseq/Cys_vs_Tat.LFC.DE.tsv", sep = "/"))

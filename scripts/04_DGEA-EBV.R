@@ -8,6 +8,8 @@ input_dir <- "data/counts"
 output_dir <- "output/tables/04_DGEA-EBV"
 fig_dir <- "output/figures/04_DGEA-EBV"
 
+log2FC_threshold = log2(1.5)
+
 ## Load gene annotation --------------------------------------------------------
 gene_annotation_file <- "data/metadata/GRCh38.p10_ALL.annotation.IDs.txt"
 gene_annotation <- read_tsv(gene_annotation_file,
@@ -78,7 +80,6 @@ contrasts_list <- tibble(
 contrasts_list <- contrasts_list[c(3,7,15,13),]
 
 ### Extract results
-log2FC_threshold = log2(1.5)
 #### Tat vs Cys
 walk2(contrasts_list$numerator[4], contrasts_list$denominator[4], 
       extract_results, dds = ebv_dds, gene_annotation = gene_annotation, log2FC_threshold = log2FC_threshold)
@@ -92,6 +93,7 @@ walk2(contrasts_list$numerator[1:3], contrasts_list$denominator[1:3],
 
 
 ## Visualize results -----------------------------------------------------------
+### 'Tat vs LCL' ---------------------------------------------------------------
 ### Read in Deseq2 results 'Tat vs LCL'
 tat_ebv <- read_tsv(str_c(output_dir, "deseq", "Tat_vs_LCL.LFC.tsv", sep = "/"))
 tat_ebv_out <- tat_ebv %>% filter(!str_detect(geneID, "ENSG"))
@@ -139,4 +141,50 @@ ggplot() +
 ggsave(str_c(fig_dir, "EBV_volcano.png", sep = "/"), units = "cm", width = 16)
 ggsave(str_c(fig_dir, "EBV_volcano.pdf", sep = "/"), units = "cm", width = 16)
 
+### 'Cys vs LCL' ---------------------------------------------------------------
+### Read in Deseq2 results 'Cys vs LCL'
+cys_ebv <- read_tsv(str_c(output_dir, "deseq", "Cys_vs_LCL.LFC.tsv", sep = "/"))
+cys_ebv_out <- cys_ebv %>% filter(!str_detect(geneID, "ENSG"))
 
+write_tsv(cys_ebv_out, str_c(output_dir, "deseq", "Cys_vs_LCL.LFC.EBV_only.tsv", sep = "/"))
+
+### Volcano plot 'Tat vs LCL'
+cys_ebv_vln <- cys_ebv %>% 
+  select(geneID, padj, log2FC) %>% 
+  mutate(organism = if_else(str_detect(geneID, "ENSG"), "HS", "EBV"))
+
+x_axis <- c(-9, -6, -3, 0, 3, 6, 9)
+
+### Highlight EBV genes
+ggplot() +
+  geom_point(
+    filter(cys_ebv_vln, organism == "HS"), 
+    mapping = aes(x = log2FC, y = -log10(padj)), 
+    color = "grey", alpha = 0.6) +
+  geom_point(
+    filter(cys_ebv_vln, organism == "EBV"), 
+    mapping = aes(x = log2FC, y = -log10(padj)), 
+    color = "red", alpha = 0.9) +
+  geom_hline(yintercept = -log10(0.05), linetype = "dashed", color = "black") +
+  geom_vline(xintercept = log2FC_threshold, linetype = "dashed", color = "black") +
+  geom_vline(xintercept = -log2FC_threshold, linetype = "dashed", color = "black") +
+  ## Edit axis names
+  ylab(expression(-log[10]~padj)) +
+  xlab(expression(log[2]~FoldChange)) +
+  ## Edit color scheme
+  # scale_color_manual(name = "", values = cols, labels = group_names) +
+  ## Edit X axis
+  scale_x_continuous(breaks = x_axis, limits = c(-max(abs(cys_ebv_vln$log2FC)), max(abs(cys_ebv_vln$log2FC)))) +
+  theme_bw() +
+  theme(
+    aspect.ratio = 1, 
+    text = element_text(size = 12, color = "black"), 
+    # axis.text.x = element_text(color = "black"),
+    # axis.text.y = element_text(color = "black"),
+    panel.background = element_rect(fill = "white", colour = "black", size = 0.5, linetype = "solid"),
+    panel.grid.major = element_blank(), 
+    panel.grid.minor = element_blank())
+
+
+ggsave(str_c(fig_dir, "EBV_Cys_volcano.png", sep = "/"), units = "cm", width = 16)
+ggsave(str_c(fig_dir, "EBV_Cys_volcano.pdf", sep = "/"), units = "cm", width = 16)
