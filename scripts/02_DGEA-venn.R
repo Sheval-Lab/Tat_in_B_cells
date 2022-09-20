@@ -19,17 +19,17 @@ cys_vs_lcl <- read_tsv(str_c(input_dir, "Cys_vs_LCL.LFC.DE.tsv", sep = "/"))
 ## Prepare list of UP and DOWN-regulated DEGs ----------------------------------
 ### All genes
 tat_cys <- list(
-  tat_up = filter(tat_vs_lcl, padj < 0.05, log2FC >= log2fc_threshold) %>%  pull(geneID), 
-  cys_up = filter(cys_vs_lcl, padj < 0.05, log2FC >= log2fc_threshold) %>%  pull(geneID), 
-  tat_dn = filter(tat_vs_lcl, padj < 0.05, log2FC <= (-log2fc_threshold)) %>%  pull(geneID),
-  cys_dn = filter(cys_vs_lcl, padj < 0.05, log2FC <= (-log2fc_threshold)) %>%  pull(geneID))
+  tat_up = filter(tat_vs_lcl, log2FC >= log2fc_threshold) %>%  pull(geneID), 
+  cys_up = filter(cys_vs_lcl, log2FC >= log2fc_threshold) %>%  pull(geneID), 
+  tat_dn = filter(tat_vs_lcl, log2FC <= (-log2fc_threshold)) %>%  pull(geneID),
+  cys_dn = filter(cys_vs_lcl, log2FC <= (-log2fc_threshold)) %>%  pull(geneID))
 
 ### Protein-coding genes
 tat_cys_pc <- list(
-  tat_up = filter(tat_vs_lcl, padj < 0.05, log2FC >= log2fc_threshold, gene_type == "protein_coding") %>%  pull(geneID), 
-  cys_up = filter(cys_vs_lcl, padj < 0.05, log2FC >= log2fc_threshold, gene_type == "protein_coding") %>%  pull(geneID), 
-  tat_dn = filter(tat_vs_lcl, padj < 0.05, log2FC <= (-log2fc_threshold), gene_type == "protein_coding") %>%  pull(geneID),
-  cys_dn = filter(cys_vs_lcl, padj < 0.05, log2FC <= (-log2fc_threshold), gene_type == "protein_coding") %>%  pull(geneID))
+  tat_up = filter(tat_vs_lcl, log2FC >= log2fc_threshold, gene_type == "protein_coding") %>%  pull(geneID), 
+  cys_up = filter(cys_vs_lcl, log2FC >= log2fc_threshold, gene_type == "protein_coding") %>%  pull(geneID), 
+  tat_dn = filter(tat_vs_lcl, log2FC <= (-log2fc_threshold), gene_type == "protein_coding") %>%  pull(geneID),
+  cys_dn = filter(cys_vs_lcl, log2FC <= (-log2fc_threshold), gene_type == "protein_coding") %>%  pull(geneID))
 
 cat_names <- c(
   expression("RPMI"^{"Tat"}~"vs"~"RPMI"), 
